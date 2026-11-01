@@ -212,6 +212,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             transform: perspective(1000px) translateZ(0);
+            cursor: pointer;
         }
 
         .product-card:hover {
@@ -458,7 +459,7 @@
 
         .btn { width: 100%; padding: 12px; border: none; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 14px; }
         .btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
-        .btn-secondary { background: rgba(51, 65, 85, 0.6); color: #f8fafc; margin-top: 12px; border: 1px solid rgba(255, 255, 255, 0.08); }
+        .btn-secondary { background: rgba(51, 65, 85, 0.6); color: #f8fafc; margin-top: 12px; border: 1px solid rgba(255, 255, 255, 0.08); user-select: none; }
         
         .admin-section { border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 18px; margin-top: 18px; }
         .admin-section-title { font-size: 15px; color: #f8fafc; margin-bottom: 12px; font-weight: 600; }
@@ -472,6 +473,48 @@
         .btn-edit { background: #eab308; color: #000; }
         .btn-del { background: #ef4444; color: #fff; }
         .btn-reply { background: #6366f1; color: #fff; }
+
+        /* Analytics Custom Styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .analytics-card {
+            background: rgba(30, 41, 59, 0.6);
+            padding: 12px;
+            border-radius: 14px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .analytics-card.full {
+            grid-column: span 2;
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+        .analytics-label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 4px; }
+        .analytics-value { font-size: 22px; font-weight: 800; color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+        .analytics-card.full .analytics-value { font-size: 28px; color: #a5b4fc; text-shadow: 0 0 15px rgba(165, 180, 252, 0.4); }
+        
+        .daily-list-box {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 14px;
+            padding: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .daily-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .daily-row:last-child { border-bottom: none; }
+        .daily-date { font-weight: 600; color: #818cf8; }
+        .daily-count { font-weight: 700; color: #38bdf8; }
     </style>
 </head>
 <body>
@@ -492,7 +535,7 @@
             <p class="shop-tagline" id="shopTagline">আমাদের সোশ্যাল পেজ ও ডিজিটাল সার্ভিসের লিঙ্কসমূহ</p>
         </div>
 
-        <!-- 3D Product Showcase Carousel -->
+        <!-- 3D Product Carousel Showcase -->
         <div class="product-section">
             <div class="section-heading">আমাদের প্রোডাক্টসমূহ</div>
             <div class="product-carousel" id="productCarousel"></div>
@@ -511,6 +554,22 @@
         <footer>
             &copy; <span id="footerTitle">Mood On</span> - All Rights Reserved
         </footer>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal" id="productDetailModal">
+        <div class="modal-box" style="text-align: center;">
+            <div class="modal-header">
+                <span class="modal-title" id="modalProdTitle">প্রোডাক্টের বিবরণ</span>
+                <button class="close-btn" onclick="closeModal('productDetailModal')">&times;</button>
+            </div>
+            <div style="width:100%; height:240px; overflow:hidden; border-radius:18px; margin-bottom:16px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08);">
+                <img id="modalProdImg" src="" alt="Product" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div style="font-size: 22px; font-weight: 800; color: #38bdf8; margin-bottom: 14px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);" id="modalProdPrice"></div>
+            <div style="font-size: 14px; color: #cbd5e1; text-align: left; background: rgba(30, 41, 59, 0.5); padding: 14px 16px; border-radius: 14px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.06); white-space: pre-wrap; line-height: 1.6;" id="modalProdDesc"></div>
+            <button class="btn btn-primary" onclick="closeModal('productDetailModal')">বন্ধ করুন</button>
+        </div>
     </div>
 
     <!-- Review Submission Modal -->
@@ -569,8 +628,38 @@
                 <button class="close-btn" onclick="closeModal('adminModal')">&times;</button>
             </div>
 
-            <!-- Shop Info Update -->
+            <!-- Visitor Analytics Section -->
             <div class="admin-section" style="margin-top:0;">
+                <div class="admin-section-title">ভিজিটর অ্যানালিটিক্স</div>
+                
+                <div class="analytics-grid">
+                    <!-- Total Visitors -->
+                    <div class="analytics-card full">
+                        <span class="analytics-label">সর্বমোট ভিজিট (Total)</span>
+                        <div class="analytics-value" id="adminTotalVisits">০</div>
+                    </div>
+                    <!-- Today Visitors -->
+                    <div class="analytics-card">
+                        <span class="analytics-label">আজকের ভিজিট</span>
+                        <div class="analytics-value" id="adminTodayVisits" style="font-size: 18px;">০</div>
+                    </div>
+                    <!-- Last 30 Days Visitors -->
+                    <div class="analytics-card">
+                        <span class="analytics-label">গত ৩০ দিনে মোট</span>
+                        <div class="analytics-value" id="admin30DaysVisits" style="font-size: 18px;">০</div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="margin-bottom: 6px;">গত ৭ দিনের প্রতিদিনের হিসাব:</label>
+                    <div class="daily-list-box" id="adminLast7DaysList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shop Info Update -->
+            <div class="admin-section">
                 <div class="admin-section-title">দোকানের তথ্য পরিবর্তন</div>
                 <div class="form-group">
                     <label>দোকানের নাম</label>
@@ -590,14 +679,18 @@
 
             <!-- Product Showcase Management -->
             <div class="admin-section">
-                <div class="admin-section-title">প্রোডাক্ট ম্যানেজমেন্ট (সর্বোচ্চ ১৫টি)</div>
+                <div class="admin-section-title">প্রোডাক্ট ম্যানেজমেন্ট (আনলিমিটেড)</div>
                 <div class="form-group">
                     <label>প্রোডাক্টের নাম</label>
                     <input type="text" id="prodTitleInput" class="form-control" placeholder="প্রোডাক্টের নাম...">
                 </div>
                 <div class="form-group">
-                    <label>প্রোডাক্টের দাম (যেমন: ৳৫০০)</label>
+                    <label>প্রোডাক্টের দাম (যেমন: ৳৪৫০)</label>
                     <input type="text" id="prodPriceInput" class="form-control" placeholder="দাম লিখুন...">
+                </div>
+                <div class="form-group">
+                    <label>প্রোডাক্টের বিস্তারিত বিবরণ (Details)</label>
+                    <textarea id="prodDescInput" class="form-control" rows="3" placeholder="প্রোডাক্টের বিবরণ লিখুন..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>প্রোডাক্টের ছবি (URL অথবা ফাইল)</label>
@@ -657,7 +750,8 @@
                 <button class="btn btn-primary" onclick="changePassword()">পাসওয়ার্ড আপডেট</button>
             </div>
 
-            <button class="btn btn-secondary" onclick="resetDefaultData()" style="margin-top:15px;">ডিফল্ট ডেটা রিস্টোর করুন</button>
+            <!-- Secured Reset Button (7 Seconds Long Press + Password) -->
+            <button class="btn btn-secondary" id="resetBtn" style="margin-top:15px; cursor:pointer;">ডিফল্ট ডেটা রিস্টোর করুন (৭ সেকেন্ড চেপে ধরে রাখুন)</button>
         </div>
     </div>
 
@@ -684,10 +778,12 @@
                 logo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
                 password: "modon"
             },
+            totalVisits: 0,
+            dailyVisits: {}, 
             products: [
-                { id: "p1", title: "প্রোডাক্ট ১", price: "৳৪৫০", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&auto=format&fit=crop&q=80" },
-                { id: "p2", title: "প্রোডাক্ট ২", price: "৳৬৫০", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&auto=format&fit=crop&q=80" },
-                { id: "p3", title: "প্রোডাক্ট ৩", price: "৳৩৫০", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&auto=format&fit=crop&q=80" }
+                { id: "p1", title: "প্রোডাক্ট ১", price: "৳৪৫০", description: "এটি প্রোডাক্ট ১ এর বিস্তারিত বিবরণ। চমৎকার কোয়ালিটি ও আকর্ষণীয় ডিজাইন।", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&auto=format&fit=crop&q=80" },
+                { id: "p2", title: "প্রোডাক্ট ২", price: "৳৬৫০", description: "এটি প্রোডাক্ট ২ এর বিস্তারিত বিবরণ। প্রিমিয়াম লুক এবং দীর্ঘস্থায়ী।", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&auto=format&fit=crop&q=80" },
+                { id: "p3", title: "প্রোডাক্ট ৩", price: "৳৩৫০", description: "এটি প্রোডাক্ট ৩ এর বিস্তারিত বিবরণ। দারুণ আকর্ষণীয় ও সহজ ব্যবহার্য।", image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=200&auto=format&fit=crop&q=80" }
             ],
             categories: [
                 { id: "cat1", name: "Social Media" },
@@ -706,18 +802,33 @@
         let appData = JSON.parse(localStorage.getItem('moodOnData')) || defaultData;
         let editingLinkId = null;
 
+        // Visitor counter with date tracking (session-based)
+        if (!sessionStorage.getItem('moodOnVisited')) {
+            sessionStorage.setItem('moodOnVisited', 'true');
+            const today = new Date().toISOString().split('T')[0];
+
+            db.ref('moodOnData/totalVisits').transaction((current) => {
+                return (current || 0) + 1;
+            });
+
+            db.ref(`moodOnData/dailyVisits/${today}`).transaction((current) => {
+                return (current || 0) + 1;
+            });
+        }
+
         // Real-time listener from Firebase Database for instant sync
         dataRef.on('value', (snapshot) => {
             const serverData = snapshot.val();
             if (serverData) {
                 appData = serverData;
+                if(appData.totalVisits === undefined) appData.totalVisits = 0;
+                if(appData.dailyVisits === undefined) appData.dailyVisits = {};
                 localStorage.setItem('moodOnData', JSON.stringify(appData));
                 renderPage();
                 if (document.getElementById('adminModal').classList.contains('active')) {
                     populateAdminPanel();
                 }
             } else {
-                // If database is empty, initialize with defaultData
                 dataRef.set(defaultData);
             }
         });
@@ -737,7 +848,7 @@
             document.getElementById('shopTagline').innerText = appData.shop.tagline;
             document.getElementById('shopLogo').src = appData.shop.logo;
 
-            // Render Products Carousel with 3D Image & Price
+            // Render Products Carousel
             const prodContainer = document.getElementById('productCarousel');
             prodContainer.innerHTML = '';
             if(!appData.products || appData.products.length === 0) {
@@ -746,7 +857,7 @@
                 document.querySelector('.product-section').style.display = 'block';
                 appData.products.forEach(p => {
                     prodContainer.innerHTML += `
-                        <div class="product-card">
+                        <div class="product-card" onclick="openProductModal('${p.id}')">
                             <div class="product-img-wrapper">
                                 <img src="${p.image}" class="product-img" alt="${p.title}">
                             </div>
@@ -798,7 +909,7 @@
                 <span>গড় রেটিং: <strong>⭐ ${avgRating} / ৫</strong></span>
             `;
 
-            // Render Public Scrollable Reviews with visible replies
+            // Render Public Scrollable Reviews
             const pubReviewsContainer = document.getElementById('publicReviewsList');
             pubReviewsContainer.innerHTML = '';
             if(totalReviews === 0) {
@@ -827,6 +938,19 @@
             }
         }
 
+        // Open Product Details Modal
+        function openProductModal(id) {
+            const product = appData.products.find(p => p.id === id);
+            if (!product) return;
+
+            document.getElementById('modalProdTitle').innerText = product.title;
+            document.getElementById('modalProdImg').src = product.image;
+            document.getElementById('modalProdPrice').innerText = product.price || '৳০০';
+            document.getElementById('modalProdDesc').innerText = product.description || 'কোনো বিবরণ দেওয়া হয়নি।';
+
+            openModal('productDetailModal');
+        }
+
         // Review Submission
         document.getElementById('reviewForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -849,7 +973,7 @@
             alert('আপনার রিভিউ সফলভাবে সাবমিট হয়েছে!');
         });
 
-        // 7-Second Silent Press Control for Admin Panel
+        // 10-Second Silent Press Control for Admin Panel Logo
         let pressTimer = null;
         const logoWrapper = document.getElementById('logoWrapper');
 
@@ -866,6 +990,44 @@
         logoWrapper.addEventListener('touchstart', startPress, {passive: false});
         logoWrapper.addEventListener('touchend', cancelPress);
         logoWrapper.addEventListener('touchcancel', cancelPress);
+
+
+        // --- 7-Second Long Press Control & Password Verification for Reset Button ---
+        let resetPressTimer = null;
+        const resetBtn = document.getElementById('resetBtn');
+
+        function startResetPress(e) {
+            if(e.type === 'touchstart') e.preventDefault();
+            clearTimeout(resetPressTimer);
+            resetBtn.style.opacity = '0.6';
+            resetBtn.style.background = 'rgba(239, 68, 68, 0.4)';
+            
+            resetPressTimer = setTimeout(() => {
+                resetBtn.style.opacity = '1';
+                resetBtn.style.background = 'rgba(51, 65, 85, 0.6)';
+                
+                const pass = prompt("ডেটা রিস্টোর করতে এডমিন পাসওয়ার্ড দিন:");
+                if (pass === appData.shop.password) {
+                    resetDefaultData();
+                } else if (pass !== null) {
+                    alert('ভুল পাসওয়ার্ড! ডেটা রিসেট হয়নি।');
+                }
+            }, 7000);
+        }
+
+        function cancelResetPress() {
+            clearTimeout(resetPressTimer);
+            resetBtn.style.opacity = '1';
+            resetBtn.style.background = 'rgba(51, 65, 85, 0.6)';
+        }
+
+        resetBtn.addEventListener('mousedown', startResetPress);
+        resetBtn.addEventListener('mouseup', cancelResetPress);
+        resetBtn.addEventListener('mouseleave', cancelResetPress);
+        resetBtn.addEventListener('touchstart', startResetPress, {passive: false});
+        resetBtn.addEventListener('touchend', cancelResetPress);
+        resetBtn.addEventListener('touchcancel', cancelResetPress);
+
 
         // Modals
         function openModal(id) {
@@ -887,8 +1049,43 @@
             }
         });
 
-        // Populate Admin Panel
+        // Populate Admin Panel & Analytics Calculation
         function populateAdminPanel() {
+            document.getElementById('adminTotalVisits').innerText = appData.totalVisits || 0;
+
+            const dailyVisits = appData.dailyVisits || {};
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            document.getElementById('adminTodayVisits').innerText = dailyVisits[todayStr] || 0;
+
+            let count7Days = 0;
+            let count30Days = 0;
+            let last7DaysHtml = '';
+
+            for (let i = 0; i < 30; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateKey = d.toISOString().split('T')[0];
+                const count = dailyVisits[dateKey] || 0;
+
+                if (i < 30) {
+                    count30Days += count;
+                }
+                if (i < 7) {
+                    count7Days += count;
+                    let displayDate = (i === 0) ? 'আজ (' + dateKey + ')' : dateKey;
+                    last7DaysHtml += `
+                        <div class="daily-row">
+                            <span class="daily-date">${displayDate}</span>
+                            <span class="daily-count">${count} জন</span>
+                        </div>
+                    `;
+                }
+            }
+
+            document.getElementById('admin30DaysVisits').innerText = count30Days;
+            document.getElementById('adminLast7DaysList').innerHTML = last7DaysHtml || '<div style="text-align:center; padding:10px; font-size:12px; color:#94a3b8;">কোনো ডাটা নেই</div>';
+
             document.getElementById('editShopName').value = appData.shop.name;
             document.getElementById('editShopTagline').value = appData.shop.tagline;
             document.getElementById('editShopLogoUrl').value = appData.shop.logo;
@@ -976,14 +1173,11 @@
             }
         }
 
-        // Product Management Functions
+        // Product Management Functions (Unlimited)
         function saveProduct() {
-            if(appData.products && appData.products.length >= 15) {
-                alert('সর্বোচ্চ ১৫টি প্রোডাক্ট যোগ করতে পারবেন!');
-                return;
-            }
             const title = document.getElementById('prodTitleInput').value;
             const price = document.getElementById('prodPriceInput').value;
+            const description = document.getElementById('prodDescInput').value;
             const url = document.getElementById('prodUrlInput').value;
             const file = document.getElementById('prodFileInput').files[0];
 
@@ -995,10 +1189,12 @@
                     id: 'prod_' + Date.now(),
                     title,
                     price,
+                    description,
                     image: imgSrc || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&auto=format&fit=crop&q=80'
                 });
                 document.getElementById('prodTitleInput').value = '';
                 document.getElementById('prodPriceInput').value = '';
+                document.getElementById('prodDescInput').value = '';
                 document.getElementById('prodUrlInput').value = '';
                 document.getElementById('prodFileInput').value = '';
                 saveData();
@@ -1122,10 +1318,10 @@
         }
 
         function resetDefaultData() {
-            if(confirm('সব ডেটা রিস্টোর করে ডিফল্ট সেটিংসে নিতে চান?')) {
-                appData = JSON.parse(JSON.stringify(defaultData));
-                saveData(); populateAdminPanel();
-            }
+            appData = JSON.parse(JSON.stringify(defaultData));
+            saveData(); 
+            populateAdminPanel();
+            alert('সব ডেটা সফলভাবে ডিফল্ট সেটিংসে রিস্টোর করা হয়েছে!');
         }
 
         renderPage();
